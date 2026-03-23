@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comprobante Malegrande</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f3f3f3;
+      color: #222;
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .topbar {
+      background: #fff;
+      border-radius: 18px;
+      padding: 18px 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .topbar p {
+      margin: 6px 0 0;
+      color: #666;
+      font-size: 15px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+
+    .card h2 {
+      margin: 0 0 16px;
+      font-size: 20px;
+    }
+
+    .switches {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .switch-btn {
+      border: 1px solid #ddd;
+      background: #fafafa;
+      border-radius: 14px;
+      padding: 14px 12px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .switch-btn.active {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+
+    .campo {
+      margin-bottom: 13px;
+    }
+
+    .campo label {
+      display: block;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #444;
+    }
+
+    .campo input,
+    .campo select,
+    .campo textarea {
+      width: 100%;
+      padding: 12px 13px;
+      border: 1px solid #d9d9d9;
+      border-radius: 12px;
+      font-size: 15px;
+      background: white;
+      outline: none;
+    }
+
+    .campo textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    .acciones {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .acciones button {
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-pdf {
+      background: #111;
+      color: white;
+    }
+
+    .btn-limpiar {
+      background: #ececec;
+      color: #222;
+    }
+
+    .oculto {
+      display: none;
+    }
+
+    /* HOJA */
+    .preview-wrap {
+      background: #fff;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      overflow: auto;
+    }
+
+    .ticket-sheet {
+      width: 794px;
+      min-height: 1123px;
+      margin: 0 auto;
+      background: #fff;
+      color: #222;
+      position: relative;
+      padding: 28px 34px 40px;
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 26px;
+    }
+
+    .sheet-logo {
+      width: 128px;
+      height: 128px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .sheet-date {
+      margin-top: 72px;
+      font-size: 17px;
+      line-height: 1.35;
+      text-align: right;
+      width: 360px;
+    }
+
+    .sheet-title {
+      text-align: center;
+      font-size: 38px;
+      font-weight: 700;
+      margin: 8px 0 10px;
+      line-height: 1.2;
+    }
+
+    .sheet-address {
+      text-align: center;
+      font-size: 18px;
+      line-height: 1.45;
+      max-width: 710px;
+      margin: 0 auto 42px;
+    }
+
+    .sheet-body {
+      width: 92%;
+      margin: 0 auto;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .sheet-paragraph {
+      margin: 0 0 24px;
+      white-space: pre-line;
+    }
+
+    .sheet-signature-area {
+      margin-top: 70px;
+      text-align: center;
+    }
+
+    .sheet-signature {
+      width: 290px;
+      height: auto;
+      display: block;
+      margin: 0 auto -6px;
+      object-fit: contain;
+    }
+
+    .sheet-line {
+      width: 340px;
+      max-width: 90%;
+      margin: 0 auto 8px;
+      border-top: 2px solid #666;
+    }
+
+    .sheet-sign-name,
+    .sheet-sign-phone {
+      font-size: 20px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .ticket-sheet {
+        transform-origin: top center;
+        width: 794px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .app {
+        padding: 10px;
+      }
+
+      .switches,
+      .acciones {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar h1 {
+        font-size: 22px;
+      }
+
+      .preview-wrap {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <h1>Generador de comprobantes</h1>
+      <p>Formato similar al comprobante de Estancias Malegrande.</p>
+    </div>
+
+    <div class="layout">
+      <div class="card">
+        <h2>Datos</h2>
+
+        <div class="switches">
+          <button id="btnCasa" class="switch-btn active" type="button" onclick="cambiarTipo('casa')">Casa</button>
+          <button id="btnSalon" class="switch-btn" type="button" onclick="cambiarTipo('salon')">Salón</button>
+        </div>
+
+        <div class="campo">
+          <label>Nombre del cliente</label>
+          <input type="text" id="cliente" value="ALISON HERNANDEZ ROCANDIO" oninput="actualizarVista()">
+        </div>
+
+        <div class="campo">
+          <label>Fecha del comprobante</label>
+          <input type="date" id="fechaRecibo" oninput="actualizarVista()">
+        </div>
+
+        <div id="camposCasa">
+          <div class="campo">
+            <label>Número de huéspedes</label>
+            <input type="number" id="huespedes" value="30" min="0" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Máximo de personas</label>
+            <input type="number" id="maxPersonas" value="35" min="0" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Costo por persona extra</label>
+            <input type="number" id="costoExtra" value="120" min="0" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Espacio</label>
+            <select id="espacioCasa" onchange="actualizarVista()">
+              <option value="Habitación sencilla">Habitación sencilla</option>
+              <option value="Habitación doble">Habitación doble</option>
+              <option value="Recámara mediana">Recámara mediana</option>
+              <option value="Casa completa" selected>Casa completa</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label>Cantidad de sencillas</label>
+            <input type="number" id="cantSencillas" value="0" min="0" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Cantidad de dobles</label>
+            <input type="number" id="cantDobles" value="0" min="0" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Cantidad de recámaras medianas</label>
+            <input type="number" id="cantMedianas" value="0" min="0" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Noches</label>
+            <input type="number" id="noches" value="1" min="1" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Fecha de ingreso</label>
+            <input type="date" id="entradaCasa" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Hora de ingreso</label>
+            <input type="time" id="horaEntrada" value="15:00" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Fecha de salida</label>
+            <input type="date" id="salidaCasa" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Hora de salida</label>
+            <input type="time" id="horaSalida" value="12:00" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Total</label>
+            <input type="number" id="totalCasa" value="3500" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>A cuenta</label>
+            <input type="number" id="anticipoCasa" value="900" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Resta</label>
+            <input type="number" id="restaCasa" value="2600" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Método o nota de depósito</label>
+            <input type="text" id="metodoPagoCasa" value="Depósito banco Azteca" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Detalle adicional</label>
+            <textarea id="detalleAdicionalCasa" placeholder="Ejemplo: incluye cocina, alberca, etc." oninput="actualizarVista()"></textarea>
+          </div>
+        </div>
+
+        <div id="camposSalon" class="oculto">
+          <div class="campo">
+            <label>Tipo de evento</label>
+            <input type="text" id="tipoEvento" value="Evento social" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Fecha del evento</label>
+            <input type="date" id="fechaEvento" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Anticipo</label>
+            <input type="number" id="anticipoSalon" value="350" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Total</label>
+            <input type="number" id="totalSalon" value="850" oninput="actualizarVista()">
+          </div>
+
+          <div class="campo">
+            <label>Limpieza</label>
+            <select id="limpieza" onchange="actualizarVista()">
+              <option value="incluye">Incluye limpieza</option>
+              <option value="cliente">El cliente realiza la limpieza</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label>Detalle adicional</label>
+            <textarea id="detalleAdicionalSalon" placeholder="Ejemplo: evento familiar, horario especial..." oninput="actualizarVista()"></textarea>
+          </div>
+        </div>
+
+        <div class="acciones">
+          <button class="btn-pdf" onclick="generarPDF()">Descargar PDF</button>
+          <button class="btn-limpiar" onclick="limpiarFormulario()">Limpiar</button>
+        </div>
+      </div>
+
+      <div class="preview-wrap">
+        <div class="ticket-sheet" id="ticketSheet">
+          <div class="sheet-header">
+            <img src="logo.png" alt="Logo" class="sheet-logo" id="logoVista">
+            <div class="sheet-date" id="fechaVista">Ciudad de Mexico a 23 de marzo de 2026.</div>
+          </div>
+
+          <div class="sheet-title" id="tituloVista">Estancias "Malegrande"</div>
+
+          <div class="sheet-address" id="direccionVista">
+            Carretera Mexico - Chalma, Cuauhtemoc s/n, C.P 52483, Chalma, Estado de Mexico. México.
+          </div>
+
+          <div class="sheet-body">
+            <div class="sheet-paragraph" id="texto1"></div>
+            <div class="sheet-paragraph" id="texto2"></div>
+            <div class="sheet-paragraph" id="texto3"></div>
+          </div>
+
+          <div class="sheet-signature-area">
+            <img src="firma.png" alt="Firma" class="sheet-signature" id="firmaVista">
+            <div class="sheet-line"></div>
+            <div class="sheet-sign-name">ISRAEL PEREZ GOMEZ</div>
+            <div class="sheet-sign-phone">5569691302</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let tipoServicio = "casa";
+
+    function fechaHoyInput() {
+      const hoy = new Date();
+      const y = hoy.getFullYear();
+      const m = String(hoy.getMonth() + 1).padStart(2, "0");
+      const d = String(hoy.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatoDinero(valor) {
+      return parseFloat(valor || 0).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatearFecha(fecha) {
+      if (!fecha) return "";
+      const [y, m, d] = fecha.split("-");
+      const meses = {
+        "01": "enero", "02": "febrero", "03": "marzo", "04": "abril",
+        "05": "mayo", "06": "junio", "07": "julio", "08": "agosto",
+        "09": "septiembre", "10": "octubre", "11": "noviembre", "12": "diciembre"
+      };
+      return `${parseInt(d)} de ${meses[m]} de ${y}`;
+    }
+
+    function nombreDia(fecha) {
+      if (!fecha) return "";
+      const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+      const f = new Date(fecha + "T00:00:00");
+      return dias[f.getDay()];
+    }
+
+    function cambiarTipo(tipo) {
+      tipoServicio = tipo;
+      document.getElementById("btnCasa").classList.toggle("active", tipo === "casa");
+      document.getElementById("btnSalon").classList.toggle("active", tipo === "salon");
+      document.getElementById("camposCasa").classList.toggle("oculto", tipo !== "casa");
+      document.getElementById("camposSalon").classList.toggle("oculto", tipo !== "salon");
+      actualizarVista();
+    }
+
+    function construirResumenHabitaciones() {
+      const sencillas = parseInt(document.getElementById("cantSencillas").value || 0);
+      const dobles = parseInt(document.getElementById("cantDobles").value || 0);
+      const medianas = parseInt(document.getElementById("cantMedianas").value || 0);
+
+      const partes = [];
+      if (sencillas > 0) partes.push(`${sencillas} sencilla${sencillas > 1 ? "s" : ""}`);
+      if (dobles > 0) partes.push(`${dobles} doble${dobles > 1 ? "s" : ""}`);
+      if (medianas > 0) partes.push(`${medianas} recámara${medianas > 1 ? "s" : ""} mediana${medianas > 1 ? "s" : ""}`);
+      return partes.join(", ");
+    }
+
+    function actualizarVista() {
+      const cliente = (document.getElementById("cliente").value || "________________").toUpperCase();
+      const fechaRecibo = document.getElementById("fechaRecibo").value;
+
+      document.getElementById("fechaVista").textContent =
+        `Ciudad de Mexico a ${formatearFecha(fechaRecibo)}.`;
+
+      if (tipoServicio === "casa") {
+        const huespedes = document.getElementById("huespedes").value || "0";
+        const maxPersonas = document.getElementById("maxPersonas").value || "0";
+        const costoExtra = formatoDinero(document.getElementById("costoExtra").value || 0);
+        const espacio = document.getElementById("espacioCasa").value || "";
+        const noches = document.getElementById("noches").value || "1";
+        const entrada = document.getElementById("entradaCasa").value;
+        const salida = document.getElementById("salidaCasa").value;
+        const horaEntrada = document.getElementById("horaEntrada").value || "";
+        const horaSalida = document.getElementById("horaSalida").value || "";
+        const total = formatoDinero(document.getElementById("totalCasa").value || 0);
+        const anticipo = formatoDinero(document.getElementById("anticipoCasa").value || 0);
+        const resta = formatoDinero(document.getElementById("restaCasa").value || 0);
+        const metodoPago = document.getElementById("metodoPagoCasa").value || "";
+        const detalle = document.getElementById("detalleAdicionalCasa").value.trim();
+        const resumen = construirResumenHabitaciones();
+
+        document.getElementById("tituloVista").textContent = 'Estancias "Malegrande"';
+        document.getElementById("direccionVista").style.display = "block";
+
+        document.getElementById("texto1").textContent =
+          `Comprobante de reservación por parte de ${cliente} por concepto de hospedaje en "Casa Malegrande"`;
+
+        let texto2 =
+`Datos reservación:
+Número de huéspedes- ${huespedes} personas.
+Max. ${maxPersonas} personas después la persona extra $${costoExtra} pesos
+Espacio- ${espacio}.`;
+
+        if (resumen) {
+          texto2 += `\nHabitaciones- ${resumen}.`;
+        }
+
+        texto2 += `
+Noches- ${noches}
+Ingreso- ${horaEntrada} horas, ${nombreDia(entrada)} ${formatearFecha(entrada)}.
+Salida- ${horaSalida} horas, ${nombreDia(salida)} ${formatearFecha(salida)}.
+Total- $ ${total}
+A cuenta- $ ${anticipo} ${metodoPago}
+Resta- $ ${resta} se liquida previo acceso`;
+
+        if (detalle) {
+          texto2 += `\nDetalle adicional- ${detalle}`;
+        }
+
+        document.getElementById("texto2").textContent = texto2;
+        document.getElementById("texto3").textContent = "";
+      } else {
+        const evento = document.getElementById("tipoEvento").value || "evento";
+        const fechaEvento = document.getElementById("fechaEvento").value;
+        const anticipoSalon = formatoDinero(document.getElementById("anticipoSalon").value || 0);
+        const totalSalon = formatoDinero(document.getElementById("totalSalon").value || 0);
+        const restoSalon = formatoDinero((parseFloat(document.getElementById("totalSalon").value || 0) - parseFloat(document.getElementById("anticipoSalon").value || 0)));
+        const limpieza = document.getElementById("limpieza").value === "incluye"
+          ? "Incluye limpieza"
+          : "La limpieza la realiza el cliente";
+        const detalleSalon = document.getElementById("detalleAdicionalSalon").value.trim();
+
+        document.getElementById("tituloVista").textContent = 'Salón de Fiestas "Malegrande"';
+        document.getElementById("direccionVista").style.display = "none";
+
+        document.getElementById("texto1").textContent =
+          `Comprobante de apartado por parte de ${cliente} para ${evento}.`;
+
+        let texto2 =
+`Datos reservación:
+Fecha del evento- ${formatearFecha(fechaEvento)}.
+Anticipo- $ ${anticipoSalon}
+Total- $ ${totalSalon}
+Resta- $ ${restoSalon}
+Limpieza- ${limpieza}`;
+
+        if (detalleSalon) {
+          texto2 += `\nDetalle adicional- ${detalleSalon}`;
+        }
+
+        document.getElementById("texto2").textContent = texto2;
+        document.getElementById("texto3").textContent = "";
+      }
+    }
+
+    async function generarPDF() {
+      const { jsPDF } = window.jspdf;
+      const ticket = document.getElementById("ticketSheet");
+
+      const canvas = await html2canvas(ticket, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      const nombre = (document.getElementById("cliente").value || "Comprobante").replace(/\s+/g, "_");
+      pdf.save(`Comprobante_${nombre}.pdf`);
+    }
+
+    function limpiarFormulario() {
+      document.getElementById("cliente").value = "";
+      document.getElementById("detalleAdicionalCasa").value = "";
+      document.getElementById("detalleAdicionalSalon").value = "";
+      actualizarVista();
+    }
+
+    window.addEventListener("load", () => {
+      const hoy = fechaHoyInput();
+      document.getElementById("fechaRecibo").value = hoy;
+      document.getElementById("entradaCasa").value = hoy;
+      document.getElementById("salidaCasa").value = hoy;
+      document.getElementById("fechaEvento").value = hoy;
+      actualizarVista();
+    });
+  </script>
+</body>
+</html>
