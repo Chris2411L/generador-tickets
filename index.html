@@ -4,314 +4,60 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Comprobante Malegrande</title>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, Helvetica, sans-serif;
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+    body { margin: 0; background: #f3f3f3; color: #222; }
+    .app { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .topbar,.card,.preview-wrap { background: #fff; border-radius: 18px; box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+    .topbar { padding: 18px 22px; margin-bottom: 20px; }
+    .topbar h1 { margin: 0; font-size: 28px; }
+    .topbar p { margin: 6px 0 0; color: #666; font-size: 15px; }
+    .layout { display: grid; grid-template-columns: 390px 1fr; gap: 20px; align-items: start; }
+    .card { padding: 20px; }
+    .switches { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+    .switch-btn { border: 1px solid #ddd; background: #fafafa; border-radius: 14px; padding: 14px 12px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    .switch-btn.active { background: #111; color: #fff; border-color: #111; }
+    .campo { margin-bottom: 13px; }
+    .campo label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #444; }
+    .campo input,.campo select,.campo textarea {
+      width: 100%; padding: 12px 13px; border: 1px solid #d9d9d9; border-radius: 12px;
+      font-size: 15px; background: white; outline: none;
     }
-
-    body {
-      margin: 0;
-      background: #f3f3f3;
-      color: #222;
-    }
-
-    .app {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .topbar {
-      background: #fff;
-      border-radius: 18px;
-      padding: 18px 22px;
-      margin-bottom: 20px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-    }
-
-    .topbar h1 {
-      margin: 0;
-      font-size: 28px;
-    }
-
-    .topbar p {
-      margin: 6px 0 0;
-      color: #666;
-      font-size: 15px;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 390px 1fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-    }
-
-    .card h2 {
-      margin: 0 0 16px;
-      font-size: 20px;
-    }
-
-    .switches {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-
-    .switch-btn {
-      border: 1px solid #ddd;
-      background: #fafafa;
-      border-radius: 14px;
-      padding: 14px 12px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .switch-btn.active {
-      background: #111;
-      color: #fff;
-      border-color: #111;
-    }
-
-    .campo {
-      margin-bottom: 13px;
-    }
-
-    .campo label {
-      display: block;
-      font-size: 14px;
-      font-weight: bold;
-      margin-bottom: 6px;
-      color: #444;
-    }
-
-    .campo input,
-    .campo select,
-    .campo textarea {
-      width: 100%;
-      padding: 12px 13px;
-      border: 1px solid #d9d9d9;
-      border-radius: 12px;
-      font-size: 15px;
-      background: white;
-      outline: none;
-    }
-
-    .campo textarea {
-      min-height: 82px;
-      resize: vertical;
-    }
-
-    .campo input:focus,
-    .campo select:focus,
-    .campo textarea:focus {
-      border-color: #b08a57;
-    }
-
-    .mini-ayuda {
-      font-size: 12px;
-      color: #666;
-      margin-top: 5px;
-      line-height: 1.4;
-    }
-
-    .acciones {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .acciones button {
-      border: none;
-      border-radius: 14px;
-      padding: 14px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .btn-pdf {
-      background: #111;
-      color: white;
-    }
-
-    .btn-limpiar {
-      background: #ececec;
-      color: #222;
-    }
-
-    .btn-sec {
-      background: #b08a57;
-      color: white;
-      width: 100%;
-      margin-top: 8px;
-      border: none;
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .preview-wrap {
-      background: #fff;
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-      overflow: auto;
-    }
-
+    .campo textarea { min-height: 82px; resize: vertical; }
+    .campo input:focus,.campo select:focus,.campo textarea:focus { border-color: #b08a57; }
+    .acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+    .acciones button { border: none; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    .btn-pdf { background: #111; color: white; }
+    .btn-limpiar { background: #ececec; color: #222; }
+    .preview-wrap { padding: 18px; overflow: auto; }
+    .preview-scale { width: 100%; display: flex; justify-content: center; align-items: flex-start; overflow: auto; }
     .ticket-sheet {
-      width: 794px;
-      min-height: 1123px;
-      margin: 0 auto;
-      background: #fff;
-      color: #222;
-      position: relative;
-      padding: 28px 34px 40px;
+      width: 794px; min-height: 1123px; background: #fff; color: #222; position: relative;
+      padding: 28px 34px 40px; transform-origin: top center;
     }
-
-    .sheet-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 26px;
-    }
-
-    .sheet-logo-wrap {
-      width: 128px;
-      height: 128px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
-    }
-
-    .sheet-logo {
-      width: 128px;
-      height: 128px;
-      object-fit: contain;
-      display: block;
-    }
-
-    .sheet-date {
-      margin-top: 72px;
-      font-size: 17px;
-      line-height: 1.35;
-      text-align: right;
-      width: 360px;
-    }
-
-    .sheet-title {
-      text-align: center;
-      font-size: 38px;
-      font-weight: 700;
-      margin: 8px 0 10px;
-      line-height: 1.2;
-    }
-
-    .sheet-address {
-      text-align: center;
-      font-size: 18px;
-      line-height: 1.45;
-      max-width: 710px;
-      margin: 0 auto 42px;
-    }
-
-    .sheet-body {
-      width: 92%;
-      margin: 0 auto;
-      font-size: 18px;
-      line-height: 1.5;
-    }
-
-    .sheet-paragraph {
-      margin: 0 0 24px;
-      white-space: pre-line;
-    }
-
-    .sheet-signature-area {
-      margin-top: 70px;
-      text-align: center;
-    }
-
-    .sheet-signature {
-      width: 290px;
-      height: auto;
-      display: block;
-      margin: 0 auto -6px;
-      object-fit: contain;
-    }
-
-    .sheet-line {
-      width: 340px;
-      max-width: 90%;
-      margin: 0 auto 8px;
-      border-top: 2px solid #666;
-    }
-
-    .sheet-sign-name,
-    .sheet-sign-phone {
-      font-size: 20px;
-      line-height: 1.45;
-      text-align: center;
-    }
-
-    .oculto {
-      display: none !important;
-    }
-
-    @media (max-width: 1100px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 900px) {
-      .preview-wrap {
-        padding: 10px;
-      }
-    }
-
+    .sheet-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; }
+    .sheet-logo-wrap { width: 128px; height: 128px; display: flex; align-items: flex-start; justify-content: flex-start; }
+    .sheet-logo { width: 128px; height: 128px; object-fit: contain; display: block; }
+    .sheet-date { margin-top: 72px; font-size: 17px; line-height: 1.35; text-align: right; width: 360px; }
+    .sheet-title { text-align: center; font-size: 38px; font-weight: 700; margin: 8px 0 10px; line-height: 1.2; }
+    .sheet-address { text-align: center; font-size: 18px; line-height: 1.45; max-width: 710px; margin: 0 auto 42px; }
+    .sheet-body { width: 92%; margin: 0 auto; font-size: 18px; line-height: 1.5; }
+    .sheet-paragraph { margin: 0 0 24px; white-space: pre-line; }
+    .sheet-signature-area { margin-top: 70px; text-align: center; }
+    .sheet-signature { width: 290px; height: auto; display: block; margin: 0 auto -6px; object-fit: contain; }
+    .sheet-line { width: 340px; max-width: 90%; margin: 0 auto 8px; border-top: 2px solid #666; }
+    .sheet-sign-name,.sheet-sign-phone { font-size: 20px; line-height: 1.45; text-align: center; }
+    .oculto { display: none !important; }
+    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .preview-wrap { padding: 10px; } .ticket-sheet { transform: scale(var(--ticket-scale, 1)); } }
     @media (max-width: 600px) {
-      .app {
-        padding: 10px;
-      }
-
-      .topbar h1 {
-        font-size: 22px;
-      }
-
-      .switches,
-      .acciones {
-        grid-template-columns: 1fr;
-      }
-
-      .card {
-        padding: 16px;
-      }
-
-      .preview-wrap {
-        padding: 8px;
-      }
-
-      .ticket-sheet {
-        width: 794px;
-      }
+      .app { padding: 10px; }
+      .topbar h1 { font-size: 22px; }
+      .switches,.acciones { grid-template-columns: 1fr; }
+      .card { padding: 16px; }
+      .preview-wrap { padding: 8px; }
     }
   </style>
 </head>
@@ -468,13 +214,6 @@
           </div>
         </div>
 
-        <div class="campo">
-          <label>Si el logo o firma no salen en PDF</label>
-          <input type="file" id="imgPicker" accept="image/*" class="oculto">
-          <button type="button" class="btn-sec" onclick="seleccionarImagenes()">Cargar logo y firma una sola vez</button>
-          <div class="mini-ayuda">Solo úsalo si tu navegador bloquea las imágenes locales al generar el PDF.</div>
-        </div>
-
         <div class="acciones">
           <button class="btn-pdf" onclick="generarPDF()">Descargar PDF</button>
           <button class="btn-limpiar" onclick="limpiarFormulario()">Limpiar</button>
@@ -482,31 +221,33 @@
       </div>
 
       <div class="preview-wrap">
-        <div class="ticket-sheet" id="ticketSheet">
-          <div class="sheet-header">
-            <div class="sheet-logo-wrap">
-              <img src="logo.png" alt="Logo" class="sheet-logo" id="logoVista">
+        <div class="preview-scale">
+          <div class="ticket-sheet" id="ticketSheet">
+            <div class="sheet-header">
+              <div class="sheet-logo-wrap">
+                <img alt="Logo" class="sheet-logo" id="logoVista">
+              </div>
+              <div class="sheet-date" id="fechaVista">Ciudad de Mexico a 23 de marzo de 2026.</div>
             </div>
-            <div class="sheet-date" id="fechaVista">Ciudad de Mexico a 23 de marzo de 2026.</div>
-          </div>
 
-          <div class="sheet-title" id="tituloVista">Estancias "Malegrande"</div>
+            <div class="sheet-title" id="tituloVista">Estancias "Malegrande"</div>
 
-          <div class="sheet-address" id="direccionVista">
-            Carretera Mexico - Chalma, Cuauhtemoc s/n, C.P 52483, Chalma, Estado de Mexico. México.
-          </div>
+            <div class="sheet-address" id="direccionVista">
+              Carretera Mexico - Chalma, Cuauhtemoc s/n, C.P 52483, Chalma, Estado de Mexico. México.
+            </div>
 
-          <div class="sheet-body">
-            <div class="sheet-paragraph" id="texto1"></div>
-            <div class="sheet-paragraph" id="texto2"></div>
-            <div class="sheet-paragraph" id="texto3"></div>
-          </div>
+            <div class="sheet-body">
+              <div class="sheet-paragraph" id="texto1"></div>
+              <div class="sheet-paragraph" id="texto2"></div>
+              <div class="sheet-paragraph" id="texto3"></div>
+            </div>
 
-          <div class="sheet-signature-area">
-            <img src="firma.png" alt="Firma" class="sheet-signature" id="firmaVista">
-            <div class="sheet-line"></div>
-            <div class="sheet-sign-name">ISRAEL PEREZ GOMEZ</div>
-            <div class="sheet-sign-phone">5569691302</div>
+            <div class="sheet-signature-area">
+              <img alt="Firma" class="sheet-signature" id="firmaVista">
+              <div class="sheet-line"></div>
+              <div class="sheet-sign-name">ISRAEL PEREZ GOMEZ</div>
+              <div class="sheet-sign-phone">5569691302</div>
+            </div>
           </div>
         </div>
       </div>
@@ -515,6 +256,9 @@
 
   <script>
     let tipoServicio = "casa";
+
+    const LOGO_EMBED = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa8AAAJDCAYAAAC8BZtlAAAQAElEQVR4AeydB2AUxf7HZ7Zfv1Qg9CogiCCiIipBEaQKSkBQlCa9";
+    const SIG_EMBED = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABGsAAAZACAMAAAD5Az9zAAADAFBMVEVHcEwaGhr9/f3+/v79/f3+/v7////////7+/v////9/f3+";
 
     function fechaHoyInput() {
       const hoy = new Date();
@@ -562,7 +306,6 @@
       const sencillas = parseInt(document.getElementById("cantSencillas").value || 0);
       const dobles = parseInt(document.getElementById("cantDobles").value || 0);
       const medianas = parseInt(document.getElementById("cantMedianas").value || 0);
-
       const partes = [];
       if (sencillas > 0) partes.push(`${sencillas} sencilla${sencillas > 1 ? "s" : ""}`);
       if (dobles > 0) partes.push(`${dobles} doble${dobles > 1 ? "s" : ""}`);
@@ -658,78 +401,29 @@ Limpieza- ${limpieza}`;
       }
     }
 
-    function fileToDataURL(file) {
-      return new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result);
-        r.onerror = reject;
-        r.readAsDataURL(file);
-      });
-    }
+    function ajustarEscalaVista() {
+      const ticket = document.getElementById("ticketSheet");
+      const wrap = document.querySelector(".preview-wrap");
+      if (!ticket || !wrap) return;
 
-    async function seleccionarImagenes() {
-      const picker = document.getElementById("imgPicker");
-      picker.accept = "image/*";
-      picker.multiple = true;
-      picker.onchange = async () => {
-        const files = Array.from(picker.files || []);
-        if (files[0]) {
-          const logoData = await fileToDataURL(files[0]);
-          localStorage.setItem("malegrande_logo_fallback", logoData);
-          document.getElementById("logoVista").src = logoData;
-        }
-        if (files[1]) {
-          const firmaData = await fileToDataURL(files[1]);
-          localStorage.setItem("malegrande_firma_fallback", firmaData);
-          document.getElementById("firmaVista").src = firmaData;
-        }
-      };
-      picker.click();
-    }
-
-    function aplicarFallbacks() {
-      const logo = document.getElementById("logoVista");
-      const firma = document.getElementById("firmaVista");
-
-      logo.onerror = () => {
-        const guardado = localStorage.getItem("malegrande_logo_fallback");
-        if (guardado) logo.src = guardado;
-      };
-
-      firma.onerror = () => {
-        const guardado = localStorage.getItem("malegrande_firma_fallback");
-        if (guardado) firma.src = guardado;
-      };
-
-      const logoGuardado = localStorage.getItem("malegrande_logo_fallback");
-      const firmaGuardada = localStorage.getItem("malegrande_firma_fallback");
-
-      if ((!logo.getAttribute("src") || logo.getAttribute("src") === "logo.png") && logoGuardado) {
-        logo.src = logoGuardado;
-      }
-      if ((!firma.getAttribute("src") || firma.getAttribute("src") === "firma.png") && firmaGuardada) {
-        firma.src = firmaGuardada;
-      }
+      const disponible = wrap.clientWidth - 16;
+      const base = 794;
+      let escala = 1;
+      if (disponible < base) escala = disponible / base;
+      ticket.style.setProperty("--ticket-scale", String(escala));
     }
 
     async function generarPDF() {
       const { jsPDF } = window.jspdf;
       const ticket = document.getElementById("ticketSheet");
-
-      await document.fonts.ready;
-
       const canvas = await html2canvas(ticket, {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
         backgroundColor: "#ffffff"
       });
-
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
-
       pdf.addImage(imgData, "PNG", 0, 0, 210, 297);
-
       const nombre = (document.getElementById("cliente").value || "Comprobante").replace(/\s+/g, "_");
       pdf.save(`Comprobante_${nombre}.pdf`);
     }
@@ -747,9 +441,13 @@ Limpieza- ${limpieza}`;
       document.getElementById("entradaCasa").value = hoy;
       document.getElementById("salidaCasa").value = hoy;
       document.getElementById("fechaEvento").value = hoy;
-      aplicarFallbacks();
+      document.getElementById("logoVista").src = LOGO_EMBED;
+      document.getElementById("firmaVista").src = SIG_EMBED;
       actualizarVista();
+      ajustarEscalaVista();
     });
+
+    window.addEventListener("resize", ajustarEscalaVista);
   </script>
 </body>
 </html>
