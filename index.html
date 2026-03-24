@@ -116,6 +116,19 @@
       resize: vertical;
     }
 
+    .campo input:focus,
+    .campo select:focus,
+    .campo textarea:focus {
+      border-color: #b08a57;
+    }
+
+    .mini-ayuda {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
     .acciones {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -142,11 +155,19 @@
       color: #222;
     }
 
-    .oculto {
-      display: none;
+    .btn-sec {
+      background: #b08a57;
+      color: white;
+      width: 100%;
+      margin-top: 8px;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
     }
 
-    /* HOJA */
     .preview-wrap {
       background: #fff;
       border-radius: 18px;
@@ -170,6 +191,14 @@
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 26px;
+    }
+
+    .sheet-logo-wrap {
+      width: 128px;
+      height: 128px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
     }
 
     .sheet-logo {
@@ -242,6 +271,10 @@
       text-align: center;
     }
 
+    .oculto {
+      display: none !important;
+    }
+
     @media (max-width: 1100px) {
       .layout {
         grid-template-columns: 1fr;
@@ -249,9 +282,8 @@
     }
 
     @media (max-width: 900px) {
-      .ticket-sheet {
-        transform-origin: top center;
-        width: 794px;
+      .preview-wrap {
+        padding: 10px;
       }
     }
 
@@ -260,17 +292,25 @@
         padding: 10px;
       }
 
+      .topbar h1 {
+        font-size: 22px;
+      }
+
       .switches,
       .acciones {
         grid-template-columns: 1fr;
       }
 
-      .topbar h1 {
-        font-size: 22px;
+      .card {
+        padding: 16px;
       }
 
       .preview-wrap {
-        padding: 10px;
+        padding: 8px;
+      }
+
+      .ticket-sheet {
+        width: 794px;
       }
     }
   </style>
@@ -384,7 +424,7 @@
 
           <div class="campo">
             <label>Método o nota de depósito</label>
-            <input type="text" id="metodoPagoCasa" value="Depósito banco Azteca" oninput="actualizarVista()">
+            <input type="text" id="metodoPagoCasa" value="Deposito banco Azteca" oninput="actualizarVista()">
           </div>
 
           <div class="campo">
@@ -428,6 +468,13 @@
           </div>
         </div>
 
+        <div class="campo">
+          <label>Si el logo o firma no salen en PDF</label>
+          <input type="file" id="imgPicker" accept="image/*" class="oculto">
+          <button type="button" class="btn-sec" onclick="seleccionarImagenes()">Cargar logo y firma una sola vez</button>
+          <div class="mini-ayuda">Solo úsalo si tu navegador bloquea las imágenes locales al generar el PDF.</div>
+        </div>
+
         <div class="acciones">
           <button class="btn-pdf" onclick="generarPDF()">Descargar PDF</button>
           <button class="btn-limpiar" onclick="limpiarFormulario()">Limpiar</button>
@@ -437,7 +484,9 @@
       <div class="preview-wrap">
         <div class="ticket-sheet" id="ticketSheet">
           <div class="sheet-header">
-            <img src="logo.png" alt="Logo" class="sheet-logo" id="logoVista">
+            <div class="sheet-logo-wrap">
+              <img src="logo.png" alt="Logo" class="sheet-logo" id="logoVista">
+            </div>
             <div class="sheet-date" id="fechaVista">Ciudad de Mexico a 23 de marzo de 2026.</div>
           </div>
 
@@ -609,23 +658,77 @@ Limpieza- ${limpieza}`;
       }
     }
 
+    function fileToDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+    }
+
+    async function seleccionarImagenes() {
+      const picker = document.getElementById("imgPicker");
+      picker.accept = "image/*";
+      picker.multiple = true;
+      picker.onchange = async () => {
+        const files = Array.from(picker.files || []);
+        if (files[0]) {
+          const logoData = await fileToDataURL(files[0]);
+          localStorage.setItem("malegrande_logo_fallback", logoData);
+          document.getElementById("logoVista").src = logoData;
+        }
+        if (files[1]) {
+          const firmaData = await fileToDataURL(files[1]);
+          localStorage.setItem("malegrande_firma_fallback", firmaData);
+          document.getElementById("firmaVista").src = firmaData;
+        }
+      };
+      picker.click();
+    }
+
+    function aplicarFallbacks() {
+      const logo = document.getElementById("logoVista");
+      const firma = document.getElementById("firmaVista");
+
+      logo.onerror = () => {
+        const guardado = localStorage.getItem("malegrande_logo_fallback");
+        if (guardado) logo.src = guardado;
+      };
+
+      firma.onerror = () => {
+        const guardado = localStorage.getItem("malegrande_firma_fallback");
+        if (guardado) firma.src = guardado;
+      };
+
+      const logoGuardado = localStorage.getItem("malegrande_logo_fallback");
+      const firmaGuardada = localStorage.getItem("malegrande_firma_fallback");
+
+      if ((!logo.getAttribute("src") || logo.getAttribute("src") === "logo.png") && logoGuardado) {
+        logo.src = logoGuardado;
+      }
+      if ((!firma.getAttribute("src") || firma.getAttribute("src") === "firma.png") && firmaGuardada) {
+        firma.src = firmaGuardada;
+      }
+    }
+
     async function generarPDF() {
       const { jsPDF } = window.jspdf;
       const ticket = document.getElementById("ticketSheet");
 
+      await document.fonts.ready;
+
       const canvas = await html2canvas(ticket, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: "#ffffff"
       });
 
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
 
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(imgData, "PNG", 0, 0, 210, 297);
 
       const nombre = (document.getElementById("cliente").value || "Comprobante").replace(/\s+/g, "_");
       pdf.save(`Comprobante_${nombre}.pdf`);
@@ -644,6 +747,7 @@ Limpieza- ${limpieza}`;
       document.getElementById("entradaCasa").value = hoy;
       document.getElementById("salidaCasa").value = hoy;
       document.getElementById("fechaEvento").value = hoy;
+      aplicarFallbacks();
       actualizarVista();
     });
   </script>
